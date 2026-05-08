@@ -3,30 +3,55 @@ import { uploadDocument } from '../services/api';
 
 export const DocumentUpload = ({ onUploadSuccess }) => {
     const [isUploading, setIsUploading] = useState(false);
-    const [statusText, setStatusText] = useState("Drag & Drop or Click to Upload (PDF/MD/HTML)");
+    const [isDragging, setIsDragging] = useState(false);
+    const [progress, setProgress] = useState(0);
+    const [statusText, setStatusText] = useState("Drop or choose PDF, MD, HTML");
 
-    const handleFileChange = async (e) => {
-        const file = e.target.files[0];
+    const handleFile = async (file) => {
         if (!file) return;
 
         setIsUploading(true);
+        setProgress(0);
         setStatusText(`Uploading ${file.name}...`);
         
         try {
-            await uploadDocument(file);
-            setStatusText("Upload initiated! Indexing in background.");
+            await uploadDocument(file, (event) => {
+                if (event.total) {
+                    setProgress(Math.round((event.loaded * 100) / event.total));
+                }
+            });
+            setStatusText("Indexing in background");
             if(onUploadSuccess) onUploadSuccess();
-            setTimeout(() => setStatusText("Drag & Drop or Click to Upload (PDF/MD/HTML)"), 3000);
+            setTimeout(() => setStatusText("Drop or choose PDF, MD, HTML"), 3000);
         } catch (err) {
-            setStatusText(`Upload failed: ${err.message}`);
+            setStatusText(err.response?.data?.detail || `Upload failed: ${err.message}`);
         } finally {
             setIsUploading(false);
-            e.target.value = ""; // Reset target for successive uploads
+            setProgress(0);
         }
     };
 
+    const handleFileChange = async (e) => {
+        await handleFile(e.target.files[0]);
+        e.target.value = "";
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        handleFile(e.dataTransfer.files[0]);
+    };
+
     return (
-        <div className="upload-dropzone" style={{opacity: isUploading ? 0.5 : 1}}>
+        <div 
+            className={`upload-dropzone ${isDragging ? 'dragging' : ''}`}
+            onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+        >
             <input 
                 type="file" 
                 id="file-upload" 
@@ -36,8 +61,13 @@ export const DocumentUpload = ({ onUploadSuccess }) => {
                 accept=".pdf,.md,.html,.htm"
             />
             <label htmlFor="file-upload" style={{cursor: 'pointer', display: 'block', width: '100%', height: '100%'}}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginBottom: '10px'}}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                <div style={{fontSize: '0.85rem'}}>{statusText}</div>
+                <div className="upload-icon">↑</div>
+                <div className="upload-status">{statusText}</div>
+                {isUploading && (
+                    <div className="progress-track" aria-label="Upload progress">
+                        <div className="progress-fill" style={{ width: `${progress}%` }} />
+                    </div>
+                )}
             </label>
         </div>
     );

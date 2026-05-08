@@ -17,8 +17,7 @@ body {
   font-family: 'Inter', sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  display: flex;
-  height: 100vh;
+  min-height: 100vh;
   overflow: hidden;
 }
 
@@ -46,21 +45,93 @@ body {
   padding: 1rem;
   transition: transform 0.3s ease;
 }
-.sidebar h2 { font-size: 1.2rem; font-weight: 600; margin-bottom: 1.5rem; letter-spacing: 0.5px; }
+.brand-block {
+  margin-bottom: 1rem;
+}
+.brand-block h2 { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.35rem; }
+.brand-block span {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
 
 /* Conversation List */
+.conversation-panel {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.new-conversation-btn {
+  width: 100%;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+.new-conversation-btn:hover {
+  border-color: rgba(59, 130, 246, 0.55);
+}
+.conversation-list {
+  min-height: 0;
+  overflow-y: auto;
+}
 .conv-item {
+  width: 100%;
   padding: 0.75rem 1rem;
   border-radius: 8px;
+  border: 0;
+  background: transparent;
   cursor: pointer;
   transition: all 0.2s ease;
   margin-bottom: 0.5rem;
   font-size: 0.9rem;
   color: var(--text-secondary);
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .conv-item:hover, .conv-item.active {
   background-color: rgba(59, 130, 246, 0.1);
   color: var(--accent-primary);
+}
+.empty-note {
+  border: 1px dashed var(--border-light);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  padding: 0.9rem;
+}
+
+.document-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 1rem 0;
+}
+.document-row {
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.65rem 0.75rem;
+}
+.document-row span {
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.document-row small {
+  font-size: 0.72rem;
+  text-transform: capitalize;
 }
 
 /* Chat Area */
@@ -106,6 +177,9 @@ body {
   border: 1px solid var(--border-light);
   border-bottom-left-radius: 4px;
 }
+.message-content {
+  white-space: pre-wrap;
+}
 
 /* Input Area */
 .input-container {
@@ -146,16 +220,38 @@ body {
 /* Upload Component */
 .upload-dropzone {
   border: 2px dashed var(--border-light);
-  border-radius: 12px;
-  padding: 2rem;
+  border-radius: 8px;
+  padding: 1.35rem;
   text-align: center;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
-  margin-top: auto;
   margin-bottom: 1rem;
 }
-.upload-dropzone:hover { border-color: var(--accent-primary); color: var(--text-primary); }
+.upload-dropzone:hover,
+.upload-dropzone.dragging { border-color: var(--accent-primary); color: var(--text-primary); }
+.upload-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  margin-bottom: 0.6rem;
+}
+.upload-status {
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+.progress-track {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  height: 6px;
+  margin-top: 0.9rem;
+  overflow: hidden;
+  width: 100%;
+}
+.progress-fill {
+  background: var(--accent-primary);
+  height: 100%;
+  transition: width 0.2s ease;
+}
 
 /* Citations */
 .citations-box {
@@ -180,7 +276,63 @@ body {
   background: rgba(59, 130, 246, 0.25);
 }
 
+.citation-popover {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  margin-top: 0.4rem;
+  max-height: 220px;
+  overflow: auto;
+  padding: 10px;
+  white-space: pre-wrap;
+}
+
 @keyframes slideIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 760px) {
+  body {
+    overflow: auto;
+  }
+
+  .app-container {
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    border-bottom: 1px solid var(--border-light);
+    border-right: 0;
+    max-height: 38vh;
+    width: 100%;
+  }
+
+  .chat-area {
+    min-height: 62vh;
+  }
+
+  .messages-container {
+    padding: 1rem;
+  }
+
+  .bubble {
+    max-width: 92%;
+  }
+
+  .input-container {
+    padding: 1rem;
+  }
+
+  .input-box {
+    gap: 0.5rem;
+  }
+
+  .send-btn {
+    padding: 0.5rem 0.9rem;
+  }
 }

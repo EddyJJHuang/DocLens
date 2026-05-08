@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
 
+from app.config import settings
 from app.retrieval.vector_store import load_faiss_index
 from app.retrieval.bm25 import load_bm25_retriever
 from app.api.routes import api_router
@@ -29,7 +30,8 @@ app = FastAPI(title="DocLens API", version="1.0.0", lifespan=lifespan)
 # Restrict Origin headers globally depending on environment contexts
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173", "*"], 
+    allow_origins=["http://localhost:3000", "http://localhost:5173", settings.frontend_origin],
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

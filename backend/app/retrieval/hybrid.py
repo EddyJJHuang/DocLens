@@ -1,5 +1,5 @@
 import logging
-from langchain.retrievers import EnsembleRetriever
+from langchain_classic.retrievers import EnsembleRetriever
 from langchain_core.retrievers import BaseRetriever
 from app.config import settings
 

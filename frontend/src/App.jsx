@@ -1,15 +1,56 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { MessageBubble } from './components/MessageBubble';
 import { DocumentUpload } from './components/DocumentUpload';
+import { ConversationList } from './components/ConversationList';
 import { useSSE } from './hooks/useSSE';
+import { getConversation, getConversations, getDocuments } from './services/api';
 import './styles/global.css';
+
+const createConversationId = () => `conv_${Date.now()}`;
 
 function App() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
-    const [conversationId] = useState(`conv_${Date.now()}`); // Simple tracking
+    const [conversationId, setConversationId] = useState(createConversationId());
+    const [conversations, setConversations] = useState({});
+    const [documents, setDocuments] = useState([]);
     const { isStreaming, streamQuery } = useSSE();
     const [errorBanner, setErrorBanner] = useState("");
+
+    const loadedDocumentCount = useMemo(
+        () => documents.filter((doc) => doc.status === 'completed').length,
+        [documents]
+    );
+
+    const refreshSidebar = async () => {
+        const [conversationResponse, documentResponse] = await Promise.all([
+            getConversations(),
+            getDocuments()
+        ]);
+        setConversations(conversationResponse.data);
+        setDocuments(documentResponse.data);
+    };
+
+    useEffect(() => {
+        refreshSidebar().catch((error) => setErrorBanner(error.message));
+    }, []);
+
+    const handleNewConversation = () => {
+        setConversationId(createConversationId());
+        setMessages([]);
+        setErrorBanner("");
+    };
+
+    const handleSelectConversation = async (id) => {
+        setConversationId(id);
+        setErrorBanner("");
+        try {
+            const response = await getConversation(id);
+            setMessages(response.data);
+        } catch (error) {
+            setErrorBanner(error.message);
+        }
+    };
 
     const handleSend = async () => {
         if (!input.trim() || isStreaming) return;
@@ -50,6 +91,7 @@ function App() {
                 setMessages(prev => prev.slice(0, -1)); 
             }
         );
+        refreshSidebar().catch(() => {});
     };
 
     const handleKeyDown = (e) => {
@@ -62,13 +104,28 @@ function App() {
     return (
         <div className="app-container">
             <aside className="sidebar">
-                <h2>DocLens</h2>
-                
-                <div style={{flex: 1}}>
-                    <div className="conv-item active">Current Session</div>
+                <div className="brand-block">
+                    <h2>DocLens</h2>
+                    <span>{loadedDocumentCount} ready documents</span>
                 </div>
                 
-                <DocumentUpload />
+                <ConversationList
+                    conversations={conversations}
+                    activeId={conversationId}
+                    onSelect={handleSelectConversation}
+                    onNewConversation={handleNewConversation}
+                />
+                
+                <div className="document-list">
+                    {documents.slice(-4).map((doc) => (
+                        <div className="document-row" key={doc.id}>
+                            <span>{doc.filename}</span>
+                            <small>{doc.status}</small>
+                        </div>
+                    ))}
+                </div>
+
+                <DocumentUpload onUploadSuccess={() => setTimeout(() => refreshSidebar().catch(() => {}), 800)} />
             </aside>
             
             <main className="chat-area">
@@ -82,7 +139,7 @@ function App() {
                     {messages.length === 0 ? (
                         <div style={{textAlign: 'center', marginTop: '20vh', color: 'var(--text-secondary)'}}>
                             <h1 style={{fontSize: '2.5rem', color: 'var(--text-primary)', marginBottom: '1rem'}}>Ask DocLens</h1>
-                            <p>Upload a document on the left sidebar to initialize the AI's context capabilities.</p>
+                            <p>Upload documents, then ask questions grounded in those sources.</p>
                         </div>
                     ) : (
                         messages.map((msg, i) => (

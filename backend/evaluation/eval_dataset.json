@@ -1,0 +1,14 @@
+[
+  {
+    "question": "What document formats does DocLens support?",
+    "expected_answer": "DocLens supports PDF, Markdown, and HTML document ingestion.",
+    "source_doc": "DocLens_Project_Prompt.md",
+    "relevant_chunks": ["PDF", "Markdown", "HTML"]
+  },
+  {
+    "question": "What retrieval methods are combined in hybrid search?",
+    "expected_answer": "Hybrid search combines FAISS dense retrieval with BM25 sparse retrieval.",
+    "source_doc": "DocLens_Project_Prompt.md",
+    "relevant_chunks": ["FAISS", "BM25", "Hybrid Search"]
+  }
+]

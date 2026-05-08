@@ -2,10 +2,12 @@ import os
 import uuid
 import json
 import logging
+from pathlib import Path
 from typing import List, Dict
 from fastapi import APIRouter, UploadFile, File, Request, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
 
+from app.config import settings
 from app.ingestion.loader import load_document
 from app.ingestion.chunker import chunk_documents
 from app.retrieval.vector_store import create_faiss_index, save_faiss_index
@@ -23,34 +25,44 @@ api_router = APIRouter()
 conversations_db: Dict[str, List[MessageBase]] = {}
 uploaded_documents_db: List[DocumentResponse] = []
 
-UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+UPLOAD_DIR = Path(settings.data_dir) / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+ALLOWED_EXTENSIONS = {".pdf", ".md", ".html", ".htm"}
 
 @api_router.post("/upload", response_model=DocumentResponse)
 async def upload_document(request: Request, background_tasks: BackgroundTasks, file: UploadFile = File(...)):
     """Accepts document uploads and queues them for indexing processing in the background."""
+    filename = Path(file.filename or "").name
+    extension = Path(filename).suffix.lower()
+    if not filename or extension not in ALLOWED_EXTENSIONS:
+        allowed = ", ".join(sorted(ALLOWED_EXTENSIONS))
+        raise HTTPException(status_code=400, detail=f"Unsupported file type. Allowed types: {allowed}")
+
     try:
-        file_path = os.path.join(UPLOAD_DIR, file.filename)
-        with open(file_path, "wb") as f:
+        stored_name = f"{uuid.uuid4().hex}_{filename}"
+        file_path = UPLOAD_DIR / stored_name
+        with file_path.open("wb") as f:
             content = await file.read()
             f.write(content)
             
         doc_id = str(uuid.uuid4())
-        doc_resp = DocumentResponse(id=doc_id, filename=file.filename, status="processing")
+        doc_resp = DocumentResponse(id=doc_id, filename=filename, status="processing")
         uploaded_documents_db.append(doc_resp)
         
         # Dispatch background ingestion handler to prevent connection blocking
-        background_tasks.add_task(process_ingestion, file_path, doc_id, request.app)
+        background_tasks.add_task(process_ingestion, str(file_path), doc_id, request.app, filename)
         
         return doc_resp
     except Exception as e:
         logger.error(f"Upload logic failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-def process_ingestion(file_path: str, doc_id: str, app):
+def process_ingestion(file_path: str, doc_id: str, app, display_filename: str):
     """Execution Pipeline: Document Loader -> Text Splitter -> Incremental Indexing."""
     try:
         docs = load_document(file_path)
+        for doc in docs:
+            doc.metadata["source"] = display_filename
         chunks = chunk_documents(docs)
         
         vectorstore = app.state.vectorstore

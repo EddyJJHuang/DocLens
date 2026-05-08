@@ -1,12 +1,22 @@
 import { useState, useCallback } from 'react';
 
+const getDefaultApiBaseUrl = () => {
+    if (typeof window === 'undefined') {
+        return 'http://localhost:8000/api';
+    }
+
+    return `${window.location.protocol}//${window.location.hostname}:8000/api`;
+};
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || getDefaultApiBaseUrl();
+
 export const useSSE = () => {
     const [isStreaming, setIsStreaming] = useState(false);
     
     const streamQuery = useCallback(async (query, conversationId, onToken, onCitations, onError) => {
         setIsStreaming(true);
         try {
-            const url = `http://localhost:8000/api/query?q=${encodeURIComponent(query)}&conversation_id=${encodeURIComponent(conversationId)}`;
+            const url = `${API_BASE_URL}/query?q=${encodeURIComponent(query)}&conversation_id=${encodeURIComponent(conversationId)}`;
             const response = await fetch(url, { method: 'GET' });
             
             if (!response.ok) {

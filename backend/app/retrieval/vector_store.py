@@ -1,15 +1,15 @@
 import os
 import logging
+from pathlib import Path
 from typing import List
 from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
+from app.config import settings
 from app.ingestion.embedder import get_embeddings_model
 
 logger = logging.getLogger(__name__)
 
-FAISS_INDEX_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "faiss_index"
-)
+FAISS_INDEX_PATH = str(Path(settings.data_dir) / "faiss_index")
 
 def create_faiss_index(documents: List[Document]) -> FAISS:
     """

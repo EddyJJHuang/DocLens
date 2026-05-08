@@ -17,14 +17,7 @@ export const SourceCitation = ({ citations }) => {
                         {cit.source} {cit.page && cit.page !== "None" ? `(p.${cit.page})` : ''} • {(cit.relevance_score * 100).toFixed(0)}%
                     </div>
                     {expandedIndex === idx && (
-                        <div style={{
-                            position: 'absolute', top: 'calc(100% + 5px)', left: 0, 
-                            background: 'var(--bg-secondary)', padding: '10px', 
-                            borderRadius: '8px', border: '1px solid var(--border-light)',
-                            zIndex: 10, width: 'max-content', maxWidth: '300px',
-                            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)',
-                            fontSize: '0.8rem', color: 'var(--text-primary)', whiteSpace: 'pre-wrap'
-                        }}>
+                        <div className="citation-popover">
                             {cit.chunk_text}
                         </div>
                     )}

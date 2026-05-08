@@ -1,15 +1,47 @@
 import os
 import pickle
 import logging
+import re
+from pathlib import Path
 from typing import List
 from langchain_core.documents import Document
 from langchain_community.retrievers import BM25Retriever
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-BM25_INDEX_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "bm25_index", "bm25_retriever.pkl"
-)
+BM25_INDEX_PATH = str(Path(settings.data_dir) / "bm25_index" / "bm25_retriever.pkl")
+STOPWORDS = {
+    "a",
+    "an",
+    "and",
+    "are",
+    "as",
+    "at",
+    "be",
+    "by",
+    "for",
+    "from",
+    "in",
+    "is",
+    "it",
+    "of",
+    "on",
+    "or",
+    "that",
+    "the",
+    "to",
+    "with",
+}
+
+
+def tokenize_for_bm25(text: str) -> List[str]:
+    """Normalize text for sparse retrieval."""
+    return [
+        token
+        for token in re.findall(r"[a-z0-9]+", text.lower())
+        if token not in STOPWORDS
+    ]
 
 def create_bm25_retriever(documents: List[Document]) -> BM25Retriever:
     """
@@ -18,7 +50,7 @@ def create_bm25_retriever(documents: List[Document]) -> BM25Retriever:
     """
     logger.info(f"Creating BM25 index from {len(documents)} document chunks...")
     try:
-        retriever = BM25Retriever.from_documents(documents)
+        retriever = BM25Retriever.from_documents(documents, preprocess_func=tokenize_for_bm25)
         logger.info("BM25 index initialized successfully.")
         return retriever
     except Exception as e:
