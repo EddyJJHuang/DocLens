@@ -6,12 +6,30 @@ import logging
 from app.config import settings
 from app.retrieval.vector_store import load_faiss_index
 from app.retrieval.bm25 import load_bm25_retriever
+from app.database.engine import DB_PATH
+from app.database.seed import seed_database
 from app.api.routes import api_router
 
 logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Surface key configuration state prominently at startup (do not crash the
+    # process — /health and the frontend should still come up; the API endpoints
+    # fail fast with a 503 when a query/upload is attempted without a key).
+    if settings.openai_configured:
+        logger.info("OpenAI key detected — RAG upload/query paths enabled.")
+    else:
+        logger.warning(
+            "OPENAI_API_KEY is not configured. The app will boot, but /api/upload "
+            "and /api/query will return 503 until a key is set in .env."
+        )
+
+    # Ensure the synthetic demand-planning database exists (zero-setup demo).
+    if not DB_PATH.exists():
+        logger.info("Seeding synthetic demand-planning database...")
+        seed_database()
+
     # Setup global app.state variables representing the loaded indices context
     try:
         logger.info("Initializing context FAISS vector engine...")

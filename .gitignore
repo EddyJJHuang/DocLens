@@ -212,3 +212,7 @@ data/
 backend/data/
 frontend/node_modules/
 frontend/dist/
+
+# Local planning / working docs — kept off the public repo
+DocMind_Tesla_Alignment_Spec.md
+PLAN.md

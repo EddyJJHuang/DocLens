@@ -1,0 +1,17 @@
+{
+  "description": "Text-to-SQL evaluation set over the synthetic demand-planning DB. gold_sql is a known-correct read-only query; execution accuracy compares the generated query's result set to gold's.",
+  "cases": [
+    {"id": "count_products", "question": "How many products are in the catalog?", "gold_sql": "SELECT COUNT(*) AS n FROM products;"},
+    {"id": "total_revenue", "question": "What is the total revenue across all sales?", "gold_sql": "SELECT ROUND(SUM(revenue), 2) AS total FROM sales_history;"},
+    {"id": "top3_products_revenue", "question": "Which 3 products have the highest total revenue?", "gold_sql": "SELECT p.name, SUM(sh.revenue) AS rev FROM sales_history sh JOIN products p ON p.product_id = sh.product_id GROUP BY p.product_id ORDER BY rev DESC LIMIT 3;"},
+    {"id": "revenue_by_region", "question": "What is the total revenue for each region?", "gold_sql": "SELECT r.name, SUM(sh.revenue) AS rev FROM sales_history sh JOIN regions r ON r.region_id = sh.region_id GROUP BY r.region_id ORDER BY rev DESC;"},
+    {"id": "products_per_category", "question": "How many products are there in each category?", "gold_sql": "SELECT category, COUNT(*) AS n FROM products GROUP BY category ORDER BY n DESC;"},
+    {"id": "longest_lead_time_supplier", "question": "Which supplier has the longest lead time?", "gold_sql": "SELECT name, lead_time_days FROM suppliers ORDER BY lead_time_days DESC LIMIT 1;"},
+    {"id": "avg_supplier_reliability", "question": "What is the average supplier reliability score?", "gold_sql": "SELECT ROUND(AVG(reliability_score), 3) AS avg_reliability FROM suppliers;"},
+    {"id": "units_sold_2025", "question": "How many units were sold in total during the 2025 calendar year?", "gold_sql": "SELECT SUM(units_sold) AS units FROM sales_history WHERE sale_month BETWEEN '2025-01-01' AND '2025-12-01';"},
+    {"id": "stockout_risk_count", "question": "How many product-region records are at stockout risk in the latest inventory snapshot?", "gold_sql": "SELECT COUNT(*) AS n FROM inventory WHERE snapshot_month = (SELECT MAX(snapshot_month) FROM inventory) AND units_on_hand <= reorder_point;"},
+    {"id": "total_forecast_units", "question": "What is the total forecasted demand across all forecasts?", "gold_sql": "SELECT SUM(forecast_units) AS units FROM demand_forecasts;"},
+    {"id": "top_region_units", "question": "Which region has the highest total units sold?", "gold_sql": "SELECT r.name, SUM(sh.units_sold) AS units FROM sales_history sh JOIN regions r ON r.region_id = sh.region_id GROUP BY r.region_id ORDER BY units DESC LIMIT 1;"},
+    {"id": "avg_price_by_category", "question": "What is the average unit price for each product category?", "gold_sql": "SELECT category, ROUND(AVG(unit_price), 2) AS avg_price FROM products GROUP BY category ORDER BY avg_price DESC;"}
+  ]
+}

@@ -1,0 +1,15 @@
+[Unit]
+Description=DocLens Backend (FastAPI + Uvicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/doclens.eddyislearning.ai/backend
+EnvironmentFile=/var/www/doclens.eddyislearning.ai/backend/.env
+ExecStart=/var/www/doclens.eddyislearning.ai/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8005
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

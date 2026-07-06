@@ -7,22 +7,31 @@ export const SourceCitation = ({ citations }) => {
 
     return (
         <div className="citations-box">
-            <div style={{width: '100%', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.25rem'}}>View Sources:</div>
-            {citations.map((cit, idx) => (
-                <div key={idx} style={{position: 'relative'}}>
-                    <div 
-                        className="citation-chip" 
-                        onClick={() => setExpandedIndex(expandedIndex === idx ? null : idx)}
-                    >
-                        {cit.source} {cit.page && cit.page !== "None" ? `(p.${cit.page})` : ''} • {(cit.relevance_score * 100).toFixed(0)}%
-                    </div>
-                    {expandedIndex === idx && (
-                        <div className="citation-popover">
-                            {cit.chunk_text}
+            <div className="citations-label">Sources</div>
+            {citations.map((cit, idx) => {
+                const pct = Math.round((cit.relevance_score ?? 0) * 100);
+                const hasScore = (cit.relevance_score ?? 0) > 0;
+                const page = cit.page && cit.page !== 'None' && cit.page !== '' ? ` · p.${cit.page}` : '';
+                return (
+                    <div key={idx} style={{ position: 'relative' }}>
+                        <div
+                            className="citation-chip"
+                            onClick={() => setExpandedIndex(expandedIndex === idx ? null : idx)}
+                            title={hasScore ? `Relevance to your question: ${pct}%` : undefined}
+                        >
+                            <span className="citation-name">📄 {cit.source}{page}</span>
+                            {hasScore && (
+                                <span className="relevance-meter" aria-label={`relevance ${pct}%`}>
+                                    <span className="relevance-fill" style={{ width: `${pct}%` }} />
+                                </span>
+                            )}
                         </div>
-                    )}
-                </div>
-            ))}
+                        {expandedIndex === idx && (
+                            <div className="citation-popover">{cit.chunk_text}</div>
+                        )}
+                    </div>
+                );
+            })}
         </div>
     );
 };

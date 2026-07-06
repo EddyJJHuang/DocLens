@@ -11,14 +11,14 @@ def get_embeddings_model() -> OpenAIEmbeddings:
     Defaults to text-embedding-3-small per project requirements.
     Tenacity is used intrinsically by LangChain for robust rete rate limit handling logic.
     """
-    if not settings.openai_api_key or settings.openai_api_key == "your_openai_api_key_here":
-        logger.warning("OPENAI_API_KEY implies placeholder format, requests may fail.")
-        
+    if not settings.openai_configured:
+        logger.warning("OPENAI_API_KEY looks like a placeholder; embedding requests will fail.")
+
     return OpenAIEmbeddings(
-        model="text-embedding-3-small",
+        model=settings.embedding_model,
         api_key=settings.openai_api_key,
         # Handled intrinsically for 429/500/502/503/504
-        max_retries=3, 
+        max_retries=3,
     )
 
 def embed_texts_batch(texts: List[str]) -> List[List[float]]:

@@ -1,10 +1,19 @@
 import logging
+import math
 from typing import List
 from langchain_core.documents import Document
 from sentence_transformers import CrossEncoder
 from app.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+def _sigmoid(x: float) -> float:
+    """Numerically stable logistic — maps a cross-encoder logit to a 0..1 relevance."""
+    if x >= 0:
+        return 1.0 / (1.0 + math.exp(-x))
+    e = math.exp(x)
+    return e / (1.0 + e)
 
 # Global singleton cached instance for the CrossEncoder to prevent reloading on each query
 _cross_encoder_model = None
@@ -35,13 +44,13 @@ def rerank_documents(query: str, documents: List[Document], top_k: int = 5) -> L
         # CrossEncoder scoring expects lists of (Query, Document Content)
         pairs = [(query, doc.page_content) for doc in documents]
         
-        # Predict relevancy confidence scores [0.0 - 1.0 logic depending on CrossEncoder mapping]
+        # CrossEncoder returns unbounded logits, not probabilities.
         scores = encoder.predict(pairs)
-        
-        # Map original documents with their computed score
+
+        # Store a 0..1 relevance (sigmoid of the logit) so the UI can show a
+        # meaningful, bounded percentage instead of a raw score like "890%".
         for i, doc in enumerate(documents):
-            # Annotate metadata for React UI usage (citations view)
-            doc.metadata["relevance_score"] = float(scores[i])
+            doc.metadata["relevance_score"] = _sigmoid(float(scores[i]))
             
         # Sort aggressively from highest to lowest matching scores
         ranked_pairs = sorted(zip(scores, documents), key=lambda x: x[0], reverse=True)

@@ -1,0 +1,546 @@
+[
+  {
+    "label": "openai:gpt-4o-mini",
+    "model_id": "gpt-4o-mini",
+    "provider": "openai",
+    "unavailable": false,
+    "n": 12,
+    "exec_accuracy": 1.0,
+    "valid_sql_rate": 1.0,
+    "exec_correct": 12,
+    "valid_count": 12,
+    "avg_latency_s": 1.714,
+    "total_tokens": 11726,
+    "est_cost_usd": 0.00193,
+    "items": [
+      {
+        "id": "count_products",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.702,
+        "input_tokens": 1082,
+        "output_tokens": 10,
+        "error": null,
+        "sql": "SELECT COUNT(*) AS product_count\nFROM products"
+      },
+      {
+        "id": "total_revenue",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.681,
+        "input_tokens": 986,
+        "output_tokens": 14,
+        "error": null,
+        "sql": "SELECT SUM(revenue) AS total_revenue\nFROM sales_history"
+      },
+      {
+        "id": "top3_products_revenue",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 2.166,
+        "input_tokens": 937,
+        "output_tokens": 51,
+        "error": null,
+        "sql": "SELECT p.name, SUM(sh.revenue) AS total_revenue\nFROM sales_history sh\nJOIN products p ON p.product_id = sh.product_id\nGROUP BY p.product_id, p.name\nORDER BY total_revenue DESC\nLIMIT 3"
+      },
+      {
+        "id": "revenue_by_region",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 1.093,
+        "input_tokens": 948,
+        "output_tokens": 49,
+        "error": null,
+        "sql": "SELECT r.name AS region, SUM(sh.revenue) AS total_revenue\nFROM sales_history sh\nJOIN regions r ON r.region_id = sh.region_id\nGROUP BY r.region_id, r.name\nORDER BY total_revenue DESC"
+      },
+      {
+        "id": "products_per_category",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.85,
+        "input_tokens": 995,
+        "output_tokens": 22,
+        "error": null,
+        "sql": "SELECT category, COUNT(*) AS product_count\nFROM products\nGROUP BY category\nORDER BY product_count DESC"
+      },
+      {
+        "id": "longest_lead_time_supplier",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.943,
+        "input_tokens": 849,
+        "output_tokens": 24,
+        "error": null,
+        "sql": "SELECT name, lead_time_days, reliability_score\nFROM suppliers\nORDER BY lead_time_days DESC\nLIMIT 1"
+      },
+      {
+        "id": "avg_supplier_reliability",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.725,
+        "input_tokens": 849,
+        "output_tokens": 17,
+        "error": null,
+        "sql": "SELECT AVG(reliability_score) AS average_reliability_score\nFROM suppliers"
+      },
+      {
+        "id": "units_sold_2025",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 1.339,
+        "input_tokens": 938,
+        "output_tokens": 40,
+        "error": null,
+        "sql": "SELECT SUM(sh.units_sold) AS total_units_sold\nFROM sales_history sh\nWHERE sh.sale_month BETWEEN '2025-01-01' AND '2025-12-01'"
+      },
+      {
+        "id": "stockout_risk_count",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 1.168,
+        "input_tokens": 952,
+        "output_tokens": 51,
+        "error": null,
+        "sql": "SELECT COUNT(*) AS stockout_risk_count\nFROM inventory i\nWHERE i.snapshot_month = (SELECT MAX(snapshot_month) FROM inventory)\n  AND (i.units_on_hand <= i.reorder_point OR i.units_on_hand < i.safety_stock)"
+      },
+      {
+        "id": "total_forecast_units",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 1.033,
+        "input_tokens": 919,
+        "output_tokens": 20,
+        "error": null,
+        "sql": "SELECT SUM(forecast_units) AS total_forecasted_demand\nFROM demand_forecasts"
+      },
+      {
+        "id": "top_region_units",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 8.731,
+        "input_tokens": 986,
+        "output_tokens": 56,
+        "error": null,
+        "sql": "SELECT r.name AS region, SUM(sh.units_sold) AS total_units_sold\nFROM sales_history sh\nJOIN regions r ON r.region_id = sh.region_id\nGROUP BY r.region_id, r.name\nORDER BY total_units_sold DESC\nLIMIT 1"
+      },
+      {
+        "id": "avg_price_by_category",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 1.135,
+        "input_tokens": 905,
+        "output_tokens": 26,
+        "error": null,
+        "sql": "SELECT category, AVG(unit_price) AS average_unit_price\nFROM products\nGROUP BY category\nORDER BY average_unit_price DESC"
+      }
+    ]
+  },
+  {
+    "label": "openai:gpt-4o",
+    "model_id": "gpt-4o",
+    "provider": "openai",
+    "unavailable": false,
+    "n": 12,
+    "exec_accuracy": 1.0,
+    "valid_sql_rate": 1.0,
+    "exec_correct": 12,
+    "valid_count": 12,
+    "avg_latency_s": 1.082,
+    "total_tokens": 11704,
+    "est_cost_usd": 0.03195,
+    "items": [
+      {
+        "id": "count_products",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.706,
+        "input_tokens": 1082,
+        "output_tokens": 9,
+        "error": null,
+        "sql": "SELECT COUNT(*) AS total_products FROM products"
+      },
+      {
+        "id": "total_revenue",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.657,
+        "input_tokens": 986,
+        "output_tokens": 13,
+        "error": null,
+        "sql": "SELECT SUM(revenue) AS total_revenue FROM sales_history"
+      },
+      {
+        "id": "top3_products_revenue",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.737,
+        "input_tokens": 937,
+        "output_tokens": 51,
+        "error": null,
+        "sql": "SELECT p.name, SUM(sh.revenue) AS total_revenue\nFROM sales_history sh\nJOIN products p ON p.product_id = sh.product_id\nGROUP BY p.product_id, p.name\nORDER BY total_revenue DESC\nLIMIT 3"
+      },
+      {
+        "id": "revenue_by_region",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.763,
+        "input_tokens": 948,
+        "output_tokens": 49,
+        "error": null,
+        "sql": "SELECT r.name AS region, SUM(sh.revenue) AS total_revenue\nFROM sales_history sh\nJOIN regions r ON r.region_id = sh.region_id\nGROUP BY r.region_id, r.name\nORDER BY total_revenue DESC"
+      },
+      {
+        "id": "products_per_category",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.584,
+        "input_tokens": 995,
+        "output_tokens": 22,
+        "error": null,
+        "sql": "SELECT category, COUNT(*) AS product_count\nFROM products\nGROUP BY category\nORDER BY product_count DESC"
+      },
+      {
+        "id": "longest_lead_time_supplier",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.558,
+        "input_tokens": 849,
+        "output_tokens": 24,
+        "error": null,
+        "sql": "SELECT name, lead_time_days, reliability_score\nFROM suppliers\nORDER BY lead_time_days DESC\nLIMIT 1"
+      },
+      {
+        "id": "avg_supplier_reliability",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 1.201,
+        "input_tokens": 849,
+        "output_tokens": 16,
+        "error": null,
+        "sql": "SELECT AVG(reliability_score) AS average_reliability_score FROM suppliers"
+      },
+      {
+        "id": "units_sold_2025",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 1.814,
+        "input_tokens": 938,
+        "output_tokens": 38,
+        "error": null,
+        "sql": "SELECT SUM(units_sold) AS total_units_sold\nFROM sales_history\nWHERE sale_month BETWEEN '2025-01-01' AND '2025-12-01'"
+      },
+      {
+        "id": "stockout_risk_count",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.839,
+        "input_tokens": 952,
+        "output_tokens": 35,
+        "error": null,
+        "sql": "SELECT COUNT(*) AS stockout_risk_count\nFROM inventory\nWHERE snapshot_month = (SELECT MAX(snapshot_month) FROM inventory)\n  AND units_on_hand <= reorder_point"
+      },
+      {
+        "id": "total_forecast_units",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 3.396,
+        "input_tokens": 919,
+        "output_tokens": 19,
+        "error": null,
+        "sql": "SELECT SUM(forecast_units) AS total_forecasted_demand FROM demand_forecasts"
+      },
+      {
+        "id": "top_region_units",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.852,
+        "input_tokens": 986,
+        "output_tokens": 56,
+        "error": null,
+        "sql": "SELECT r.name AS region, SUM(sh.units_sold) AS total_units_sold\nFROM sales_history sh\nJOIN regions r ON r.region_id = sh.region_id\nGROUP BY r.region_id, r.name\nORDER BY total_units_sold DESC\nLIMIT 1"
+      },
+      {
+        "id": "avg_price_by_category",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.872,
+        "input_tokens": 905,
+        "output_tokens": 26,
+        "error": null,
+        "sql": "SELECT category, AVG(unit_price) AS average_unit_price\nFROM products\nGROUP BY category\nORDER BY average_unit_price DESC"
+      }
+    ]
+  },
+  {
+    "label": "anthropic:claude-haiku-4-5",
+    "model_id": "claude-haiku-4-5",
+    "provider": "anthropic",
+    "unavailable": false,
+    "n": 12,
+    "exec_accuracy": 1.0,
+    "valid_sql_rate": 1.0,
+    "exec_correct": 12,
+    "valid_count": 12,
+    "avg_latency_s": 2.561,
+    "total_tokens": 14272,
+    "est_cost_usd": 0.01622,
+    "items": [
+      {
+        "id": "count_products",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 1.071,
+        "input_tokens": 1322,
+        "output_tokens": 14,
+        "error": null,
+        "sql": "SELECT COUNT(*) AS product_count FROM products"
+      },
+      {
+        "id": "total_revenue",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 1.21,
+        "input_tokens": 1194,
+        "output_tokens": 19,
+        "error": null,
+        "sql": "SELECT SUM(revenue) AS total_revenue\nFROM sales_history"
+      },
+      {
+        "id": "top3_products_revenue",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 3.828,
+        "input_tokens": 1142,
+        "output_tokens": 72,
+        "error": null,
+        "sql": "SELECT p.product_id, p.name, SUM(sh.revenue) AS total_revenue\nFROM sales_history sh\nJOIN products p ON p.product_id = sh.product_id\nGROUP BY p.product_id, p.name\nORDER BY total_revenue DESC\nLIMIT 3"
+      },
+      {
+        "id": "revenue_by_region",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.852,
+        "input_tokens": 1141,
+        "output_tokens": 63,
+        "error": null,
+        "sql": "SELECT r.name AS region, SUM(sh.revenue) AS total_revenue\nFROM sales_history sh\nJOIN regions r ON r.region_id = sh.region_id\nGROUP BY r.region_id, r.name\nORDER BY total_revenue DESC"
+      },
+      {
+        "id": "products_per_category",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 2.563,
+        "input_tokens": 1210,
+        "output_tokens": 28,
+        "error": null,
+        "sql": "SELECT category, COUNT(*) AS product_count\nFROM products\nGROUP BY category\nORDER BY product_count DESC"
+      },
+      {
+        "id": "longest_lead_time_supplier",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 4.172,
+        "input_tokens": 1022,
+        "output_tokens": 42,
+        "error": null,
+        "sql": "SELECT supplier_id, name, lead_time_days, reliability_score\nFROM suppliers\nORDER BY lead_time_days DESC\nLIMIT 1"
+      },
+      {
+        "id": "avg_supplier_reliability",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 3.98,
+        "input_tokens": 1022,
+        "output_tokens": 14,
+        "error": null,
+        "sql": "SELECT AVG(reliability_score) FROM suppliers"
+      },
+      {
+        "id": "units_sold_2025",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 2.644,
+        "input_tokens": 1148,
+        "output_tokens": 46,
+        "error": null,
+        "sql": "SELECT SUM(units_sold) AS total_units_sold\nFROM sales_history\nWHERE sale_month BETWEEN '2025-01-01' AND '2025-12-01'"
+      },
+      {
+        "id": "stockout_risk_count",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 4.571,
+        "input_tokens": 1165,
+        "output_tokens": 53,
+        "error": null,
+        "sql": "SELECT COUNT(*) AS stockout_risk_count\nFROM inventory\nWHERE snapshot_month = (SELECT MAX(snapshot_month) FROM inventory)\n  AND units_on_hand <= reorder_point"
+      },
+      {
+        "id": "total_forecast_units",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 4.04,
+        "input_tokens": 1125,
+        "output_tokens": 24,
+        "error": null,
+        "sql": "SELECT SUM(forecast_units) AS total_forecasted_demand FROM demand_forecasts"
+      },
+      {
+        "id": "top_region_units",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.873,
+        "input_tokens": 1194,
+        "output_tokens": 70,
+        "error": null,
+        "sql": "SELECT r.name AS region, SUM(sh.units_sold) AS total_units\nFROM sales_history sh\nJOIN regions r ON r.region_id = sh.region_id\nGROUP BY r.region_id, r.name\nORDER BY total_units DESC\nLIMIT 1"
+      },
+      {
+        "id": "avg_price_by_category",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.923,
+        "input_tokens": 1100,
+        "output_tokens": 42,
+        "error": null,
+        "sql": "SELECT category, ROUND(AVG(unit_price), 2) AS avg_unit_price\nFROM products\nGROUP BY category\nORDER BY avg_unit_price DESC"
+      }
+    ]
+  },
+  {
+    "label": "google:gemini-2.5-flash",
+    "model_id": "gemini-2.5-flash",
+    "provider": "google",
+    "unavailable": false,
+    "n": 12,
+    "exec_accuracy": 0.8333,
+    "valid_sql_rate": 0.9167,
+    "exec_correct": 10,
+    "valid_count": 11,
+    "avg_latency_s": 0.839,
+    "total_tokens": 14431,
+    "est_cost_usd": 0.00272,
+    "items": [
+      {
+        "id": "count_products",
+        "valid_sql": false,
+        "exec_match": false,
+        "latency_s": 0.69,
+        "input_tokens": 1263,
+        "output_tokens": 12,
+        "error": "exec: Could not parse SQL: Invalid expression / Unexpected token. Line 1, Col: 39.\n  SELECT COUNT(product_id) FROM products\u001b[4m<\u001b[0m/instruction>",
+        "sql": "SELECT COUNT(product_id) FROM products</instruction>"
+      },
+      {
+        "id": "total_revenue",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.6,
+        "input_tokens": 1156,
+        "output_tokens": 41,
+        "error": null,
+        "sql": "SELECT SUM(revenue) FROM sales_history"
+      },
+      {
+        "id": "top3_products_revenue",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 1.099,
+        "input_tokens": 1094,
+        "output_tokens": 175,
+        "error": null,
+        "sql": "SELECT p.name, SUM(sh.revenue) AS total_revenue\nFROM sales_history sh\nJOIN products p ON p.product_id = sh.product_id\nGROUP BY p.product_id, p.name\nORDER BY total_revenue DESC\nLIMIT 3"
+      },
+      {
+        "id": "revenue_by_region",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 1.018,
+        "input_tokens": 1105,
+        "output_tokens": 155,
+        "error": null,
+        "sql": "SELECT r.name AS region, SUM(sh.revenue) AS total_revenue FROM sales_history sh JOIN regions r ON r.region_id = sh.region_id GROUP BY r.region_id, r.name ORDER BY total_revenue DESC"
+      },
+      {
+        "id": "products_per_category",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.722,
+        "input_tokens": 1154,
+        "output_tokens": 70,
+        "error": null,
+        "sql": "SELECT category, COUNT(*) AS product_count FROM products GROUP BY category ORDER BY product_count DESC"
+      },
+      {
+        "id": "longest_lead_time_supplier",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.83,
+        "input_tokens": 974,
+        "output_tokens": 93,
+        "error": null,
+        "sql": "SELECT name, lead_time_days FROM suppliers ORDER BY lead_time_days DESC LIMIT 1"
+      },
+      {
+        "id": "avg_supplier_reliability",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.562,
+        "input_tokens": 974,
+        "output_tokens": 43,
+        "error": null,
+        "sql": "SELECT AVG(reliability_score) FROM suppliers"
+      },
+      {
+        "id": "units_sold_2025",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 1.049,
+        "input_tokens": 1104,
+        "output_tokens": 158,
+        "error": null,
+        "sql": "SELECT SUM(units_sold) FROM sales_history WHERE sale_month BETWEEN '2025-01-01' AND '2025-12-01'"
+      },
+      {
+        "id": "stockout_risk_count",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 1.373,
+        "input_tokens": 1115,
+        "output_tokens": 215,
+        "error": null,
+        "sql": "SELECT COUNT(*)\nFROM inventory\nWHERE snapshot_month = (SELECT MAX(snapshot_month) FROM inventory)\n  AND units_on_hand <= reorder_point"
+      },
+      {
+        "id": "total_forecast_units",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.554,
+        "input_tokens": 1066,
+        "output_tokens": 49,
+        "error": null,
+        "sql": "SELECT SUM(forecast_units) FROM demand_forecasts"
+      },
+      {
+        "id": "top_region_units",
+        "valid_sql": true,
+        "exec_match": false,
+        "latency_s": 0.9,
+        "input_tokens": 1156,
+        "output_tokens": 141,
+        "error": null,
+        "sql": "SELECT T2.name FROM sales_history AS T1 INNER JOIN regions AS T2 ON T1.region_id = T2.region_id GROUP BY T2.region_id ORDER BY SUM(T1.units_sold) DESC LIMIT 1"
+      },
+      {
+        "id": "avg_price_by_category",
+        "valid_sql": true,
+        "exec_match": true,
+        "latency_s": 0.67,
+        "input_tokens": 1044,
+        "output_tokens": 74,
+        "error": null,
+        "sql": "SELECT category, AVG(unit_price) AS average_unit_price\nFROM products\nGROUP BY category\nORDER BY category"
+      }
+    ]
+  }
+]

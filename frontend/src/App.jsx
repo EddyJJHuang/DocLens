@@ -59,38 +59,28 @@ function App() {
         setInput("");
         setErrorBanner("");
         
-        // Push user query implicitly
+        // Push the user query + an empty assistant placeholder.
         setMessages(prev => [
-            ...prev, 
+            ...prev,
             { role: 'user', content: q },
-            { role: 'assistant', content: '', citations: [] }
+            { role: 'assistant', content: '', citations: [], route: null, sql: null }
         ]);
 
-        await streamQuery(
-            q, 
-            conversationId,
-            (token) => {
-                setMessages(prev => {
-                    const newMwges = [...prev];
-                    const target = newMwges.length - 1;
-                    newMwges[target].content += token;
-                    return newMwges;
-                });
-            },
-            (citations) => {
-                setMessages(prev => {
-                    const newMwges = [...prev];
-                    const target = newMwges.length - 1;
-                    newMwges[target].citations = citations;
-                    return newMwges;
-                });
-            },
-            (errStr) => {
+        // Immutable update of the last (assistant) message. Mutating in place
+        // doubled tokens under React StrictMode.
+        const updateLast = (fn) =>
+            setMessages(prev => prev.map((msg, i) => (i === prev.length - 1 ? fn(msg) : msg)));
+
+        await streamQuery(q, conversationId, {
+            onRoute: (route) => updateLast(m => ({ ...m, route })),
+            onSqlResult: (payload) => updateLast(m => ({ ...m, sql: payload })),
+            onToken: (token) => updateLast(m => ({ ...m, content: m.content + token })),
+            onCitations: (citations) => updateLast(m => ({ ...m, citations })),
+            onError: (errStr) => {
                 setErrorBanner(errStr);
-                // Cutout failure payload safely
-                setMessages(prev => prev.slice(0, -1)); 
-            }
-        );
+                setMessages(prev => prev.slice(0, -1)); // drop the failed assistant bubble
+            },
+        });
         refreshSidebar().catch(() => {});
     };
 
@@ -139,11 +129,21 @@ function App() {
                     {messages.length === 0 ? (
                         <div style={{textAlign: 'center', marginTop: '20vh', color: 'var(--text-secondary)'}}>
                             <h1 style={{fontSize: '2.5rem', color: 'var(--text-primary)', marginBottom: '1rem'}}>Ask DocLens</h1>
-                            <p>Upload documents, then ask questions grounded in those sources.</p>
+                            <p>Ask about your uploaded documents, or query the demand-planning database in plain English.</p>
+                            <p style={{fontSize: '0.85rem', marginTop: '0.75rem'}}>
+                                Try: “What is safety stock?” &nbsp;·&nbsp; “Which 3 products have the highest revenue?”
+                            </p>
                         </div>
                     ) : (
                         messages.map((msg, i) => (
-                            <MessageBubble key={i} role={msg.role} content={msg.content} citations={msg.citations} />
+                            <MessageBubble
+                                key={i}
+                                role={msg.role}
+                                content={msg.content}
+                                citations={msg.citations}
+                                route={msg.route}
+                                sql={msg.sql}
+                            />
                         ))
                     )}
                 </div>

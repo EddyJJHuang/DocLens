@@ -1,12 +1,4 @@
-const getDefaultApiBaseUrl = () => {
-    if (typeof window === 'undefined') {
-        return 'http://localhost:8000/api';
-    }
-
-    return `${window.location.protocol}//${window.location.hostname}:8000/api`;
-};
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || getDefaultApiBaseUrl();
+import { API_BASE_URL } from '../config';
 
 const parseResponse = async (response) => {
     const data = await response.json().catch(() => ({}));
@@ -43,4 +35,8 @@ export const deleteConversation = async (id) => {
 
 export const getDocuments = async () => {
     return fetch(`${API_BASE_URL}/documents`).then(parseResponse);
+};
+
+export const sqlQuery = async (q) => {
+    return fetch(`${API_BASE_URL}/sql-query?q=${encodeURIComponent(q)}`).then(parseResponse);
 };

@@ -18,6 +18,26 @@ def test_bm25_retriever_returns_relevant_document() -> None:
     assert results[0].metadata["source"] == "api.md"
 
 
+def test_reranker_normalizes_scores_to_unit_interval(monkeypatch) -> None:
+    docs = [
+        Document(page_content="alpha", metadata={"source": "a.md"}),
+        Document(page_content="beta", metadata={"source": "b.md"}),
+    ]
+
+    class FakeEncoder:
+        def predict(self, pairs):
+            return [3.0, -2.0]  # raw logits, not probabilities
+
+    monkeypatch.setattr("app.retrieval.reranker.get_cross_encoder", lambda: FakeEncoder())
+
+    ranked = rerank_documents("query", docs, top_k=2)
+    scores = [d.metadata["relevance_score"] for d in ranked]
+
+    assert all(0.0 <= s <= 1.0 for s in scores)          # bounded relevance
+    assert ranked[0].metadata["source"] == "a.md"         # higher logit ranks first
+    assert scores[0] > scores[1]
+
+
 def test_reranker_falls_back_when_cross_encoder_fails(monkeypatch) -> None:
     docs = [
         Document(page_content="first", metadata={"source": "one.md"}),

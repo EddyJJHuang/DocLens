@@ -37,9 +37,9 @@ def format_docs(docs: List[Document]) -> str:
     return "\n".join(formatted_chunks)
 
 def get_llm(streaming: bool = True) -> ChatOpenAI:
-    """Initializes the LLM component (defaults to gpt-4o-mini for efficient generation)."""
+    """Initializes the LLM component (model is configured via settings.llm_model)."""
     return ChatOpenAI(
-        model="gpt-4o-mini",
+        model=settings.llm_model,
         temperature=0.0, # Ensures deterministic factual responses
         streaming=streaming,
         api_key=settings.openai_api_key
@@ -60,6 +60,48 @@ def setup_qa_chain():
     chain = prompt | llm | StrOutputParser()
     return chain
 
+HYBRID_SYSTEM_PROMPT = """You are DocLens, a hybrid knowledge + data assistant.
+Answer the user's question using BOTH sources below:
+- DOCUMENT CONTEXT: cite the source inline in brackets, e.g. [glossary.md].
+- DATABASE RESULT: quote the relevant figures from the rows.
+If one source lacks the information, rely on the other. Be concise and specific,
+and do not invent values that are not present in either source.
+
+DOCUMENT CONTEXT:
+{context}
+
+DATABASE RESULT:
+{db}
+"""
+
+
+def _format_db_for_prompt(sql_result: dict) -> str:
+    """Render a SQL result compactly for inclusion in a prompt."""
+    preview = sql_result.get("rows", [])[:20]
+    return (
+        f"SQL:\n{sql_result.get('sql', '')}\n"
+        f"Columns: {sql_result.get('columns', [])}\n"
+        f"Rows ({sql_result.get('row_count', 0)} total, showing up to 20):\n{preview}"
+    )
+
+
+async def stream_hybrid_answer(question: str, chat_history: List[Any], documents: List[Document], sql_result: dict):
+    """Stream an answer grounded in BOTH retrieved documents and a SQL result."""
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", HYBRID_SYSTEM_PROMPT),
+        MessagesPlaceholder(variable_name="chat_history"),
+        ("human", "{question}"),
+    ])
+    chain = prompt | get_llm(streaming=True) | StrOutputParser()
+    async for chunk in chain.astream({
+        "question": question,
+        "chat_history": chat_history,
+        "context": format_docs(documents) if documents else "(no documents available)",
+        "db": _format_db_for_prompt(sql_result),
+    }):
+        yield chunk
+
+
 async def stream_qa_answer(question: str, chat_history: List[Any], documents: List[Document]):
     """
     Async generator yielding string tokens natively from OpenAI endpoint stream back to the caller (FastAPI SSE).
@@ -70,13 +112,12 @@ async def stream_qa_answer(question: str, chat_history: List[Any], documents: Li
     # Format re-ranked chunks block into the context layout
     context_str = format_docs(documents)
     
-    try:
-        async for chunk in chain.astream({
-            "question": question,
-            "chat_history": chat_history,
-            "context": context_str
-        }):
-            yield chunk
-    except Exception as e:
-        logger.error(f"Error during stream generation: {e}")
-        yield f"\n[Error generating response: {str(e)}]"
+    # Errors are intentionally propagated (not yielded as answer text) so the
+    # API layer can emit a typed SSE `error` frame and avoid persisting a broken
+    # answer into conversation history.
+    async for chunk in chain.astream({
+        "question": question,
+        "chat_history": chat_history,
+        "context": context_str
+    }):
+        yield chunk
