@@ -1,16 +1,24 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
+import asyncio
 import logging
 
 from app.config import settings
-from app.retrieval.vector_store import load_faiss_index
-from app.retrieval.bm25 import load_bm25_retriever
 from app.database.engine import DB_PATH
 from app.database.seed import seed_database
 from app.api.routes import api_router
+from app.session_store import session_store
 
 logger = logging.getLogger(__name__)
+
+
+async def cleanup_sessions_periodically():
+    while True:
+        await asyncio.sleep(60)
+        removed = session_store.cleanup_expired()
+        if removed:
+            logger.info("Cleaned up %s expired DocLens session cache(s).", removed)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -30,17 +38,15 @@ async def lifespan(app: FastAPI):
         logger.info("Seeding synthetic demand-planning database...")
         seed_database()
 
-    # Setup global app.state variables representing the loaded indices context
-    try:
-        logger.info("Initializing context FAISS vector engine...")
-        app.state.vectorstore = load_faiss_index()
-        logger.info("Initializing context BM25 retrieval engine...")
-        app.state.bm25_retriever = load_bm25_retriever()
-    except Exception as e:
-        logger.warning(f"Could not load physical indices initially on startup: {e}. Search engines will remain dormant until the first file is ingested via /api/upload.")
-        app.state.vectorstore = None
-        app.state.bm25_retriever = None
+    # Uploaded documents are session-scoped runtime cache, not product memory.
+    # A restart should not resurrect previous users' files or indexes.
+    session_store.clear_all()
+    cleanup_task = asyncio.create_task(cleanup_sessions_periodically())
     yield
+    cleanup_task.cancel()
+    with suppress(asyncio.CancelledError):
+        await cleanup_task
+    session_store.clear_all()
     # Execution here handles elegant resource shutdown / destruction behaviors
 
 app = FastAPI(title="DocLens API", version="1.0.0", lifespan=lifespan)

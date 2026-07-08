@@ -3,9 +3,9 @@ import { SourceCitation } from './SourceCitation';
 import { SqlResult } from './SqlResult';
 
 const ROUTE_LABELS = {
-    structured: '🗄️ Database',
-    unstructured: '📄 Documents',
-    hybrid: '🔀 Hybrid',
+    structured: 'Database',
+    unstructured: 'Documents',
+    hybrid: 'Hybrid',
 };
 
 export const MessageBubble = ({ role, content, citations, route, sql }) => {

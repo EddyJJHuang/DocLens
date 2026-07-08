@@ -23,6 +23,14 @@ class Settings(BaseSettings):
     # --- Ingestion ---
     chunk_size: int = 1000
     chunk_overlap: int = 200
+    max_upload_mb: int = 10
+    max_session_uploads: int = 5
+    max_session_storage_mb: int = 30
+    session_ttl_minutes: int = 120
+    max_active_sessions: int = 100
+    max_query_chars: int = 2000
+    max_conversations_per_session: int = 20
+    max_messages_per_conversation: int = 40
 
     # --- Retrieval ---
     hybrid_dense_weight: float = 0.5

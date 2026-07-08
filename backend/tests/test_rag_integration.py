@@ -15,6 +15,7 @@ from app.config import settings
 from app.main import app
 
 pytestmark = pytest.mark.integration
+SESSION_HEADERS = {"X-DocLens-Session": "itest-session-rag"}
 
 SAMPLE_DOC = """# Demand Planning Glossary (Synthetic Sample)
 
@@ -56,19 +57,21 @@ def test_upload_and_query_end_to_end() -> None:
         #    synchronously under TestClient, so it completes before we return).
         upload = client.post(
             "/api/upload",
+            headers=SESSION_HEADERS,
             files={"file": ("glossary.md", SAMPLE_DOC.encode("utf-8"), "text/markdown")},
         )
         assert upload.status_code == 200, upload.text
         doc_id = upload.json()["id"]
 
         # 2. Ingestion should have completed and the index should be live.
-        docs = client.get("/api/documents").json()
+        docs = client.get("/api/documents", headers=SESSION_HEADERS).json()
         status = next((d["status"] for d in docs if d["id"] == doc_id), "missing")
         assert status == "completed", f"expected completed ingestion, got: {status}"
 
         # 3. Ask a question whose answer is grounded in the uploaded doc.
         resp = client.get(
             "/api/query",
+            headers=SESSION_HEADERS,
             params={"q": "What is safety stock and how large should it be?", "conversation_id": "itest"},
         )
         assert resp.status_code == 200, resp.text

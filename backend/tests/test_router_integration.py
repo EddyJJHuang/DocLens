@@ -12,6 +12,7 @@ from app.config import settings
 from app.main import app
 
 pytestmark = pytest.mark.integration
+SESSION_HEADERS = {"X-DocLens-Session": "itest-session-router"}
 
 GLOSSARY = """# Demand Planning Glossary (Synthetic Sample)
 
@@ -34,7 +35,7 @@ def test_structured_question_routes_to_sql() -> None:
         resp = client.get("/api/query", params={
             "q": "How many products are there in each category?",
             "conversation_id": "route-sql",
-        })
+        }, headers=SESSION_HEADERS)
         assert resp.status_code == 200, resp.text
         frames = _collect(resp.text)
 
@@ -53,11 +54,15 @@ def test_structured_question_routes_to_sql() -> None:
 @pytest.mark.skipif(not settings.openai_configured, reason="requires a real OPENAI_API_KEY")
 def test_unstructured_question_routes_to_rag() -> None:
     with TestClient(app) as client:
-        client.post("/api/upload", files={"file": ("glossary.md", GLOSSARY.encode(), "text/markdown")})
+        client.post(
+            "/api/upload",
+            headers=SESSION_HEADERS,
+            files={"file": ("glossary.md", GLOSSARY.encode(), "text/markdown")},
+        )
         resp = client.get("/api/query", params={
             "q": "What does safety stock mean?",
             "conversation_id": "route-rag",
-        })
+        }, headers=SESSION_HEADERS)
         assert resp.status_code == 200, resp.text
         frames = _collect(resp.text)
 

@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { API_BASE_URL } from '../config';
+import { getSessionId } from '../services/api';
 
 /**
  * Streams a unified query response. `handlers` may include:
@@ -13,7 +14,12 @@ export const useSSE = () => {
         setIsStreaming(true);
         try {
             const url = `${API_BASE_URL}/query?q=${encodeURIComponent(query)}&conversation_id=${encodeURIComponent(conversationId)}`;
-            const response = await fetch(url, { method: 'GET' });
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-DocLens-Session': getSessionId(),
+                },
+            });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
